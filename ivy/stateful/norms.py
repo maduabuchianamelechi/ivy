@@ -136,7 +136,6 @@ class BatchNorm1D(Module):
             If true, calculate and use the mean and variance of `x`. Otherwise, use the
             internal `mean` and `variance` when affine is True.
         """
-        if
         self.num_features = num_features
         self._affine = affine
         self.data_format = data_format
