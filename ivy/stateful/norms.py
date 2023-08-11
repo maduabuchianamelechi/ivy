@@ -3,7 +3,7 @@
 # local
 import ivy
 from ivy.stateful.module import Module
-from ivy.stateful.initializers import Zeros, Ones
+from ivy.stateful.initializers import Zeros, Ones, RandomNormal
 
 
 class LayerNorm(Module):
@@ -327,3 +327,65 @@ class BatchNorm2D(Module):
             self.v.running_var = running_var
 
         return normalized
+
+class WeightNorm(Module):
+    def __init__(self, layer, data_init=True, **kwargs):
+        self._weight_init = Ones()
+        self._bias_init = Zeros()
+        self._v_init = RandomNormal()
+        self._g_init = Zeros()
+
+    def _create_variables(self, device, dtype=None):
+        """Create internal variables for the layer."""
+        v = {
+            "w": self._weight_init.create_variables(
+                    self._w_shape, device, dtype),
+        }
+        v = dict(
+            **v,
+            b=self._b_init.create_variables(
+                device=device,
+                dtype=dtype,
+            ),
+        )
+        dict(
+            **v,
+            v=self._v_init.create_variables(
+                device=device,
+                dtype=dtype,
+            ),
+        )
+        dict(
+            **v,
+            g=self._g_init.create_variables(
+                device=device,
+                dtype=dtype,
+            ),
+        )
+        return v
+
+    def _call(self, x):
+
+
+    def _forward(
+        self,
+        inputs,
+        training: bool = False,
+    ):
+        """
+        Perform forward pass of the BatchNorm layer.
+
+        Parameters
+        ----------
+        inputs
+            Inputs to process of shape N,C,*.
+        training
+            Determine the current phase (training/inference)
+
+        Returns
+        -------
+        ret
+            The outputs following the batch normalization operation.
+        """
+        return ivy.weight_norm(self.v.v, self.v.g)
+
