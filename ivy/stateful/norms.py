@@ -330,6 +330,7 @@ class BatchNorm2D(Module):
 
 class WeightNorm(Module):
     def __init__(self, layer, data_init=True, **kwargs):
+        self.layer = layer
         self._weight_init = Ones()
         self._bias_init = Zeros()
         self._v_init = RandomNormal()
@@ -364,28 +365,28 @@ class WeightNorm(Module):
         )
         return v
 
+    def data_dep_init(self, x):
+        # TODO: check expand dims works well with all types of layers
+        self.v.w = ivy.l2_normalize(
+            self.v.v, axis=self.kernel_norm_axes) * ivy.expand_dims(self.v.g, -4)
+        act = self.layer.activation
+        self.layer.activation = None
+
+        x_init = self.layer(x)
+
+        norm_axes_out = list(range(x_init.shape.rank - 1))
+
+        mean_t, std_t = ivy.mean(x_init, norm_axes_out), ivy.std(x_init, norm_axes_out)
+
+        self.v.g = 1. / (std_t + 1e-10)
+
+        self.v.b = -mean_t/std_t
+
+        self.layer.activation = act
+
     def _call(self, x):
-
-
-    def _forward(
-        self,
-        inputs,
-        training: bool = False,
-    ):
-        """
-        Perform forward pass of the BatchNorm layer.
-
-        Parameters
-        ----------
-        inputs
-            Inputs to process of shape N,C,*.
-        training
-            Determine the current phase (training/inference)
-
-        Returns
-        -------
-        ret
-            The outputs following the batch normalization operation.
-        """
-        return ivy.weight_norm(self.v.v, self.v.g)
+        self.data_dep_init(x)
+        self.v.v, self.v.g = ivy.weight_norm(self.v.v, self.c.g)
+        output = self.layer(x)
+        return output
 
