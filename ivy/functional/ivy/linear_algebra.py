@@ -1914,47 +1914,39 @@ def solve(
     *,
     out: Optional[ivy.Array] = None,
 ) -> ivy.Array:
-    """
-    Return the solution to the system of linear equations represented by the well-
-    determined (i.e., full rank) linear matrix equation AX = B.
+   """
+    Solve a system of linear equations AX = B for given matrices.
 
     Parameters
     ----------
-    x1
-        coefficient array A having shape (..., M, M) and whose innermost two dimensions
-        form square matrices. Must be of full rank (i.e., all rows or, equivalently,
-        columns must be linearly independent). Should have a floating-point data type.
-    x2
-        ordinate (or “dependent variable”) array B. If x2 has shape (M,), x2 is
-        equivalent to an array having shape (..., M, 1). If x2 has shape (..., M, K),
-        each column k defines a set of ordinate values for which to compute a solution,
-        and shape(x2)[:-1] must be compatible with shape(x1)[:-1] (see Broadcasting).
-        Should have a floating-point data type.
-    out
-        optional output array, for writing the result to. It must have a shape that the
-        inputs broadcast to.
+    x1 : array-like
+        Coefficient array A with shape (..., M, M). The innermost two dimensions
+        represent square matrices. Must have full rank.
+    x2 : array-like
+        Ordinate array B. If x2 has shape (M,), it's equivalent to an array with
+        shape (..., M, 1). If x2 has shape (..., M, K), each column k defines
+        a set of ordinate values for which to compute a solution. The shape of x2[:-1]
+        must be compatible with shape(x1)[:-1].
+    out : array-like, optional
+        Output array for writing the result. It must have a shape compatible with the
+        inputs.
 
     Returns
     -------
-    ret
-        an array containing the solution to the system AX = B for each square matrix.
-        The returned array must have the same shape as x2 (i.e., the array corresponding
-        to B) and must have a floating-point data type determined by Type Promotion
-        Rules.
+    ret : array
+        An array containing the solution to the system AX = B for each square matrix.
+        The shape of the returned array matches x2, and it has a floating-point data type.
 
+    Notes
+    -----
+    This function conforms to the Array API Standard. For more information, see the
+    documentation at https://data-apis.org/array-api/latest/.
 
-    This function conforms to the `Array API Standard
-    <https://data-apis.org/array-api/latest/>`_. This docstring is an extension of the
-    `docstring <https://data-apis.org/array-api/latest/
-    extensions/generated/array_api.linalg.solve.html>`_
-    in the standard.
-
-    Both the description and the type hints above assumes an array input for simplicity,
-    but this function is *nestable*, and therefore also accepts :class:`ivy.Container`
-    instances in place of any of the arguments.
+    The function supports array inputs as well as nestable Container instances.
 
     """
-    return current_backend(x1, x2).solve(x1, x2, out=out)
+    backend = current_backend(x1, x2)
+    return backend.solve(x1, x2, out=out)
 
 
 @handle_exceptions
